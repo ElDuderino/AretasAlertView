@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alert History Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .navbar-brand img {
+            max-height: 40px;
+            width: auto;
+        }
+
+        .alert-card {
+            transition: all 0.3s ease;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .alert-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .alert-header {
+            border-radius: 15px 15px 0 0;
+            padding: 15px;
+            font-weight: bold;
+        }
+
+        .alert-body {
+            padding: 20px;
+        }
+
+        .filter-section {
+            background-color: #ffffff;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-content {
+            flex: 1 0 auto;
+        }
+
+        footer {
+            flex-shrink: 0;
+            background-color: #343a40;
+            color: #ffffff;
+            padding: 20px 0;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img src="logo.png" alt="Logo" class="img-fluid">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Alerts</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Settings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Profile</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container mt-5">
+            <h1 class="text-center mb-5">Alert History Dashboard</h1>
+
+            <div class="filter-section">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="alertIdFilter" class="form-label">Filter by Alert ID:</label>
+                        <select id="alertIdFilter" class="form-select">
+                            <option value="">All Alert IDs</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="sensorTypeFilter" class="form-label">Filter by Sensor Type:</label>
+                        <select id="sensorTypeFilter" class="form-select">
+                            <option value="">All Sensor Types</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="alertContainer" class="row">
+                <!-- Alert cards will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+
+
+    <div w3-include-html="includes/footer.html"></div>
+    <div w3-include-html="includes/login-modal.html"></div>
+
+    <div id="loader" class="lds-roller loader">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/6.0.0/bootbox.min.js"></script>
+    <script src="js/asnapp.js"></script>
+    <script>
+        // (The JavaScript code remains the same as in the previous version)
+        class AlertHistoryItem {
+            constructor(data) {
+                this.mac = data.mac;
+                this.timestamp = data.timestamp;
+                this.type = data.type;
+                this.data = data.data;
+                this.alertId = data.alertId;
+                this.isActive = data.isActive;
+                this.eventId = data.eventId;
+                this.rtnTimestamp = data.rtnTimestamp;
+            }
+
+            getStatusClass() {
+                return this.isActive ? 'bg-danger text-white' : 'bg-success text-white';
+            }
+
+            getStatusText() {
+                return this.isActive ? 'Active' : 'Resolved';
+            }
+
+            formatTimestamp(timestamp) {
+                return new Date(timestamp).toLocaleString();
+            }
+
+            createCard() {
+                const card = document.createElement('div');
+                card.className = 'col-md-6 col-lg-4';
+                card.innerHTML = `
+                    <div class="alert-card">
+                        <div class="alert-header ${this.getStatusClass()}">
+                            Alert ID: ${this.alertId}
+                        </div>
+                        <div class="alert-body">
+                            <p><strong>Status:</strong> ${this.getStatusText()}</p>
+                            <p><strong>Event ID:</strong> ${this.eventId}</p>
+                            <p><strong>Sensor Type:</strong> ${this.type}</p>
+                            <p><strong>Data:</strong> ${this.data}</p>
+                            <p><strong>Device MAC:</strong> ${this.mac}</p>
+                            <p><strong>Triggered:</strong> ${this.formatTimestamp(this.timestamp)}</p>
+                            ${this.rtnTimestamp ? `<p><strong>Resolved:</strong> ${this.formatTimestamp(this.rtnTimestamp)}</p>` : ''}
+                        </div>
+                    </div>
+                `;
+                return card;
+            }
+        }
+
+        class AlertDashboard {
+            constructor() {
+                this.alertContainer = document.getElementById('alertContainer');
+                this.alertIdFilter = document.getElementById('alertIdFilter');
+                this.sensorTypeFilter = document.getElementById('sensorTypeFilter');
+                this.alerts = [];
+
+                this.init();
+            }
+
+            async init() {
+                const alertsList = await this.doAlertFetch();
+
+                const 
+
+                this.fetchAlerts();
+                this.setupEventListeners();
+                setInterval(() => this.fetchAlerts(), 10000);
+            }
+
+            setupEventListeners() {
+                this.alertIdFilter.addEventListener('change', () => this.filterAlerts());
+                this.sensorTypeFilter.addEventListener('change', () => this.filterAlerts());
+            }
+
+            async doAlertFetch() {
+
+                const url = `${API_URL}alert/list`;
+
+                let classThis = this;
+
+                //let queryData = getStartEndDates();
+                let queryData = {};
+
+                try {
+
+                    showLoader();
+
+                    let response = await globalFetch(`${url}?` + new URLSearchParams(queryData), {
+                        headers: {
+                            "Authorization": `Bearer ${appBearerToken}`,
+                        }
+                    });
+
+                    let data = await response.json();
+
+                    if (response.status != 200) {
+                        return;
+                    }
+
+                    return data;
+                    
+
+                } catch (error) {
+
+                    console.error("Failed to query main dashboard data");
+                    console.error(error);
+
+                } finally {
+                    hideLoader();
+                }
+
+                return null;
+            }
+
+
+
+            async doAPIFetch() {
+
+                const url = `${API_URL}/rest/`;
+
+                let classThis = this;
+
+                let queryData = getStartEndDates();
+
+                try {
+
+                    showLoader();
+
+                    let response = await globalFetch(`${url}?` + new URLSearchParams(queryData), {
+                        headers: {
+                            "Authorization": `Bearer ${appBearerToken}`,
+                        }
+                    });
+
+                    let data = await response.json();
+
+                    if (response.status != 200) {
+                        return;
+                    }
+                    console.debug(data);
+                    createStatsBoxes(data);
+
+                } catch (error) {
+
+                    console.error("Failed to query main dashboard data");
+                    console.error(error);
+
+                } finally {
+                    hideLoader();
+                }
+
+                return null;
+            }
+
+            fetchAlerts() {
+                // Stub: Replace with actual API call
+                const mockData = [
+                    { mac: 123456, timestamp: Date.now(), type: 1, data: 25.5, alertId: 'A001', isActive: true, eventId: 1, rtnTimestamp: null },
+                    { mac: 789012, timestamp: Date.now() - 3600000, type: 2, data: 80, alertId: 'A002', isActive: false, eventId: 2, rtnTimestamp: Date.now() },
+                    // Add more mock data as needed
+                ];
+
+                this.alerts = mockData.map(data => new AlertHistoryItem(data));
+                this.updateFilters();
+                this.renderAlerts();
+            }
+
+            updateFilters() {
+                const alertIds = [...new Set(this.alerts.map(alert => alert.alertId))];
+                const sensorTypes = [...new Set(this.alerts.map(alert => alert.type))];
+
+                this.updateFilterOptions(this.alertIdFilter, alertIds);
+                this.updateFilterOptions(this.sensorTypeFilter, sensorTypes);
+            }
+
+            updateFilterOptions(selectElement, options) {
+                const currentValue = selectElement.value;
+                selectElement.innerHTML = '<option value="">All</option>';
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    selectElement.appendChild(optionElement);
+                });
+                selectElement.value = currentValue;
+            }
+
+            filterAlerts() {
+                const alertId = this.alertIdFilter.value;
+                const sensorType = this.sensorTypeFilter.value;
+
+                const filteredAlerts = this.alerts.filter(alert =>
+                    (!alertId || alert.alertId === alertId) &&
+                    (!sensorType || alert.type === parseInt(sensorType))
+                );
+
+                this.renderAlerts(filteredAlerts);
+            }
+
+            renderAlerts(alertsToRender = this.alerts) {
+                this.alertContainer.innerHTML = '';
+                alertsToRender.forEach(alert => {
+                    this.alertContainer.appendChild(alert.createCard());
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await app_init();
+            new AlertDashboard();
+        });
+
+    </script>
+</body>
+
+</html>

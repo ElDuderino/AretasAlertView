@@ -1,0 +1,32 @@
+<!-- Login Modal -->
+<div class="modal fade" id="modalLoginForm" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <!-- Flexbox container for aligning the logo and title -->
+                <h5 class="modal-title d-flex align-items-center" id="loginModalLabel">
+                    <img src="logo.png" alt="Logo" class="me-2" style="height: 30px;"> <!-- Adjust the height as needed -->
+                    Alert Viewer Login
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="loginUsername" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="loginUsername" placeholder="username">
+                    </div>
+                    <div class="mb-3">
+                        <label for="loginPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="loginPassword" placeholder="password">
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="rememberMe">
+                        <label class="form-check-label" for="rememberMe">Remember me</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="btnLogin">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
