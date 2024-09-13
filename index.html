@@ -143,11 +143,12 @@
     <script>
         // (The JavaScript code remains the same as in the previous version)
         class AlertHistoryItem {
+
             constructor(data) {
                 this.mac = data.mac;
                 this.timestamp = data.timestamp;
-                this.type = data.type;
-                this.data = data.data;
+                this.type = data.sensorType;
+                this.data = data.sensorData;
                 this.alertId = data.alertId;
                 this.isActive = data.isActive;
                 this.eventId = data.eventId;
@@ -200,11 +201,11 @@
             }
 
             async init() {
-                const alertsList = await this.doAlertFetch();
-                
-                this.fetchAlerts();
+
+                this.alertsDefinitionList = await this.doAlertDefFetch();
+                this.fetchAlertNotices();
                 this.setupEventListeners();
-                setInterval(() => this.fetchAlerts(), 10000);
+                setInterval(() => this.fetchAlertNotices(), 30000);
             }
 
             setupEventListeners() {
@@ -212,7 +213,7 @@
                 this.sensorTypeFilter.addEventListener('change', () => this.filterAlerts());
             }
 
-            async doAlertFetch() {
+            async doAlertDefFetch() {
 
                 const url = `${API_URL}alert/list`;
 
@@ -238,7 +239,7 @@
                     }
 
                     return data;
-                    
+
 
                 } catch (error) {
 
@@ -252,37 +253,40 @@
                 return null;
             }
 
+            async fetchAlertNoticesAPI(alertIds) {
 
-
-            async doAPIFetch() {
-
-                const url = `${API_URL}/rest/`;
+                const url = `${API_URL}alerthistory/list`;
 
                 let classThis = this;
 
-                let queryData = getStartEndDates();
+                let queryData = {};
 
                 try {
 
                     showLoader();
 
-                    let response = await globalFetch(`${url}?` + new URLSearchParams(queryData), {
+                    let response = await globalFetch(url, {
+                        method: 'POST',
                         headers: {
+                            "Content-Type": "application/json",
                             "Authorization": `Bearer ${appBearerToken}`,
-                        }
+                        },
+                        body: JSON.stringify(
+                            alertIds, // Pass the alertIds array in the request body
+                        )
                     });
 
-                    let data = await response.json();
-
                     if (response.status != 200) {
-                        return;
+                        return null;
                     }
+
+                    let data = await response.json();
                     console.debug(data);
-                    createStatsBoxes(data);
+                    return data;
 
                 } catch (error) {
 
-                    console.error("Failed to query main dashboard data");
+                    console.error("Failed to query Alert Notices!");
                     console.error(error);
 
                 } finally {
@@ -292,15 +296,16 @@
                 return null;
             }
 
-            fetchAlerts() {
-                // Stub: Replace with actual API call
-                const mockData = [
-                    { mac: 123456, timestamp: Date.now(), type: 1, data: 25.5, alertId: 'A001', isActive: true, eventId: 1, rtnTimestamp: null },
-                    { mac: 789012, timestamp: Date.now() - 3600000, type: 2, data: 80, alertId: 'A002', isActive: false, eventId: 2, rtnTimestamp: Date.now() },
-                    // Add more mock data as needed
-                ];
+            async fetchAlertNotices(){
+                
+                const alertIds = this.alertsDefinitionList.map(alertItem => alertItem.id);
 
-                this.alerts = mockData.map(data => new AlertHistoryItem(data));
+                const alertNotices = await this.fetchAlertNoticesAPI(alertIds);
+
+                console.log(alertNotices);
+                this.alerts = alertNotices.map(datum => new AlertHistoryItem(datum))
+
+                //this.alerts = mockData.map(data => new AlertHistoryItem(data));
                 this.updateFilters();
                 this.renderAlerts();
             }

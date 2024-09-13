@@ -41,7 +41,7 @@ async function app_init() {
 
     console.log("APP INIT");
 
-    if ((typeof (localStorage.getItem('X-Bearer-Access-Token')) == "undefined") || (localStorage.getItem("X-Bearer-Access-Token") == null)) {
+    if ((typeof (localStorage.getItem('X-Aretas-Bearer-Access-Token')) == "undefined") || (localStorage.getItem("X-Aretas-Bearer-Access-Token") == null)) {
 
         //we don't need to do anything else since any API request will trigger a 401
         //the 401 will trigger the login form to show
@@ -51,7 +51,7 @@ async function app_init() {
 
     } else {
 
-        appBearerToken = localStorage.getItem('X-Bearer-Access-Token');
+        appBearerToken = localStorage.getItem('X-Aretas-Bearer-Access-Token');
         console.log(`Bearer token: ${appBearerToken}`);
 
     }
@@ -89,11 +89,11 @@ async function app_init() {
      */
     $('#logoutButton').click(function () {
 
-        let token = localStorage.getItem("X-Bearer-Access-Token");
+        let token = localStorage.getItem("X-Aretas-Bearer-Access-Token");
 
         console.log("Logged out");
-        localStorage.removeItem("X-Bearer-Access-Token");
-        localStorage.removeItem("X-Bearer-Refresh-Token");
+        localStorage.removeItem("X-Aretas-Bearer-Access-Token");
+        localStorage.removeItem("X-Aretas-Bearer-Refresh-Token");
         location.reload();
         
     });
@@ -140,7 +140,7 @@ async function login(event) {
         console.log(`Response:${token}`);
 
         // Store the token in localStorage or a cookie
-        localStorage.setItem('X-Bearer-Access-Token', token);
+        localStorage.setItem('X-Aretas-Bearer-Access-Token', token);
         appBearerToken = token;
 
         console.info("Login successful!")
