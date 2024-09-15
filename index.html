@@ -95,7 +95,7 @@
 
     <div class="main-content">
         <div class="container mt-5">
-            <h1 class="text-center mb-5">Alert History Dashboard</h1>
+            <h1 class="text-center mb-5">Alert Notice Dashboard</h1>
 
             <div class="filter-section">
                 <div class="row">
@@ -140,6 +140,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/6.0.0/bootbox.min.js"></script>
     <script src="js/asnapp.js"></script>
+    <script src="js/AretasGlobalInit.js"></script>
     <script>
         // (The JavaScript code remains the same as in the previous version)
         class AlertHistoryItem {
@@ -153,6 +154,8 @@
                 this.isActive = data.isActive;
                 this.eventId = data.eventId;
                 this.rtnTimestamp = data.rtnTimestamp;
+                this.device_description = data.device_description;
+                this.alert_description = data.alert_description;
             }
 
             getStatusClass() {
@@ -173,11 +176,11 @@
                 card.innerHTML = `
                     <div class="alert-card">
                         <div class="alert-header ${this.getStatusClass()}">
-                            Alert ID: ${this.alertId}
+                            Alert: ${this.alert_description}
                         </div>
                         <div class="alert-body">
+                            <p><strong>Device:</strong> ${this.device_description} </p>
                             <p><strong>Status:</strong> ${this.getStatusText()}</p>
-                            <p><strong>Event ID:</strong> ${this.eventId}</p>
                             <p><strong>Sensor Type:</strong> ${this.type}</p>
                             <p><strong>Data:</strong> ${this.data}</p>
                             <p><strong>Device MAC:</strong> ${this.mac}</p>
@@ -191,7 +194,10 @@
         }
 
         class AlertDashboard {
-            constructor() {
+
+            constructor(aretasAppInstance) {
+
+                this.aai = aretasAppInstance;
                 this.alertContainer = document.getElementById('alertContainer');
                 this.alertIdFilter = document.getElementById('alertIdFilter');
                 this.sensorTypeFilter = document.getElementById('sensorTypeFilter');
@@ -202,7 +208,7 @@
 
             async init() {
 
-                this.alertsDefinitionList = await this.doAlertDefFetch();
+                this.alertsDefinitionList = await this.aai.listAlerts();
                 this.fetchAlertNotices();
                 this.setupEventListeners();
                 setInterval(() => this.fetchAlertNotices(), 30000);
@@ -213,49 +219,9 @@
                 this.sensorTypeFilter.addEventListener('change', () => this.filterAlerts());
             }
 
-            async doAlertDefFetch() {
-
-                const url = `${API_URL}alert/list`;
-
-                let classThis = this;
-
-                //let queryData = getStartEndDates();
-                let queryData = {};
-
-                try {
-
-                    showLoader();
-
-                    let response = await globalFetch(`${url}?` + new URLSearchParams(queryData), {
-                        headers: {
-                            "Authorization": `Bearer ${appBearerToken}`,
-                        }
-                    });
-
-                    let data = await response.json();
-
-                    if (response.status != 200) {
-                        return;
-                    }
-
-                    return data;
-
-
-                } catch (error) {
-
-                    console.error("Failed to query main dashboard data");
-                    console.error(error);
-
-                } finally {
-                    hideLoader();
-                }
-
-                return null;
-            }
-
             async fetchAlertNoticesAPI(alertIds) {
 
-                const url = `${API_URL}alerthistory/list`;
+                const url = `${ASNAPIURL}alerthistory/list`;
 
                 let classThis = this;
 
@@ -296,16 +262,50 @@
                 return null;
             }
 
-            async fetchAlertNotices(){
-                
+            getAlertObjById(alertId) {
+
+                for (const alertObj of this.alertsDefinitionList) {
+                    if (alertId == alertObj.id) {
+                        return alertObj;
+                    }
+                }
+
+                return null;
+
+            }
+
+            /**
+             * decorate the alert notice with an alert description, device description, etc.
+             */
+            getAnnotatedAlertNotice(datum) {
+
+                const alertObj = this.getAlertObjById(datum.alertId);
+
+                const ret = {
+                    "id": datum.alertId,
+                    "alert_description": alertObj?.description ?? "",
+                    "device_description": this.aai.getSensorByMac(datum.mac).description,
+                    "mac": datum.mac,
+                    "sensorData": datum.sensorData,
+                    "sensorType": datum.sensorType,
+                    "timestamp": datum.timestamp,
+                    "isActive": datum.isActive,
+                    "rtnTimestamp": datum.rtnTimestamp,
+                }
+
+                return ret;
+
+            }
+
+            async fetchAlertNotices() {
+
                 const alertIds = this.alertsDefinitionList.map(alertItem => alertItem.id);
 
                 const alertNotices = await this.fetchAlertNoticesAPI(alertIds);
 
                 console.log(alertNotices);
-                this.alerts = alertNotices.map(datum => new AlertHistoryItem(datum))
+                this.alerts = alertNotices.map(datum => new AlertHistoryItem(this.getAnnotatedAlertNotice(datum)))
 
-                //this.alerts = mockData.map(data => new AlertHistoryItem(data));
                 this.updateFilters();
                 this.renderAlerts();
             }
@@ -351,8 +351,8 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            await app_init();
-            new AlertDashboard();
+            aai = await app_init();
+            new AlertDashboard(aai);
         });
 
     </script>

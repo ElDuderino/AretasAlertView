@@ -1,7 +1,7 @@
 const REQ_METHOD = location.protocol;
 const APP_HOST = "localhost:8080/rest/";
 
-const API_URL = `${REQ_METHOD}//${APP_HOST}`;
+const ASNAPIURL = `${REQ_METHOD}//${APP_HOST}`;
 
 var appBearerToken = null;
 
@@ -98,6 +98,10 @@ async function app_init() {
         
     });
 
+    aai = new AretasAppInstance(appBearerToken);
+    await aai.aretasInitFunc();
+    return aai;
+
 }
 
 /**
@@ -126,7 +130,7 @@ async function login(event) {
         password: password
     }
 
-    const response = await globalFetch(`${API_URL}authentication/j`, {
+    const response = await globalFetch(`${ASNAPIURL}authentication/j`, {
         method: 'POST',
         body: JSON.stringify(credentials),
         headers: {
@@ -218,4 +222,67 @@ function showLoader() {
  */
 function hideLoader() {
     document.getElementById('loader').style.visibility = 'hidden';
+}
+
+/**
+ * we get an array of JSON objects like:
+ * [{
+ *  location: {
+ *      description: blah
+ *      mac: blah
+ *  }
+ *  buildingmaps: {
+ *  }, 
+ *  {
+ *  location: {
+ *      description, blah, 
+ *      mac: blah}
+ *  buildingmaps: {
+ *  }
+ * }
+ * }]
+ * 
+ * therefore we need so sort by location.description (or city, whatever)
+ * so we'll take in an optional subproperty 
+ * Function to sort alphabetically an array of objects by some specific key.
+ * 
+ * @param {String} property Key of the object to sort.
+ */
+function dynamicSort(property, subproperty = null) {
+
+    var sortOrder = 1;
+
+    if (subproperty == null) {
+
+        if (property[0] === "-") {
+            sortOrder = -1;
+            property = property.substr(1);
+        }
+
+        return function (a, b) {
+
+            if (a.hasOwnProperty(property) && b.hasOwnProperty(property)) {
+                if (sortOrder == -1) {
+                    return b[property].localeCompare(a[property]);
+                } else {
+                    return a[property].localeCompare(b[property]);
+                }
+            }
+
+        };
+
+    }
+
+    if (subproperty[0] === "-") {
+        sortOrder = -1;
+        subproperty = subproperty.substr(1);
+    }
+
+    return function (a, b) {
+        if (sortOrder == -1) {
+            return b[property][subproperty].localeCompare(a[property][subproperty]);
+        } else {
+            return a[property][subproperty].localeCompare(b[property][subproperty]);
+        }
+    };
 }
