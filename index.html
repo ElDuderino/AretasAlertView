@@ -254,6 +254,7 @@
         class AlertHistoryItem {
 
             constructor(data) {
+                this.eventId = data.eventId,
                 this.mac = data.mac;
                 this.timestamp = data.timestamp;
                 this.type = data.sensorType;
@@ -290,10 +291,16 @@
                             <div class="sensortype-icon type-${this.type}"></div>Alert: ${this.alert_description}
                         </div>
                         <div class="alert-body">
+                            <p><strong>EventId:</strong> ${this.eventId}</p>
                             <p><strong>Device:</strong> ${this.device_description} MAC:${this.mac}</p>
                             <p><strong>Building:</strong> ${this.location_description} <a href="#">View Map</a></p>
                             <p><strong>Status:</strong> ${this.getStatusText()}</p>
-                            <p><strong>Download report:</strong>&nbsp;<i class="bi bi-filetype-pdf"></i></p>
+                            <p>
+                                <strong>Download report:</strong>&nbsp;
+                                <a href="#" id="pdf-link-${this.eventId}" class="pdf-download-link">
+                                    <i class="bi bi-filetype-pdf"></i> View Report PDF
+                                </a>
+                            </p>
                             <p><strong>Sensor Type:</strong> ${this.typeStr}</p>
                             <p><strong>Data:</strong> ${this.dataStr}</p>
                             <p><strong>Triggered:</strong> ${this.formatTimestamp(this.timestamp)}</p>
@@ -301,7 +308,50 @@
                         </div>
                     </div>
                 `;
+
+                // Attach the onclick event handler for the PDF download
+                const pdfLink = card.querySelector(`#pdf-link-${this.eventId}`);
+                pdfLink.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    await this.downloadPDF(this.eventId);
+                });
+
                 return card;
+            }
+
+            // Method to handle PDF download
+            async downloadPDF(eventId) {
+
+                const url = `${PDF_GENERATOR_URL}${eventId}`;
+
+                let classThis = this;
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${appBearerToken}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+
+                        // Create a temporary link to trigger the download
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `alert_report_${eventId}.pdf`;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                    } else {
+                        console.error('Failed to fetch PDF:', response.statusText);
+                    }
+                } catch (error) {
+                    console.error('Error fetching PDF:', error);
+                }
             }
         }
 
@@ -398,6 +448,7 @@
                 let locationObj = this.aai.getLocationContainingMac(datum.mac);
 
                 const ret = {
+                    "eventId": datum.eventId,
                     "alertId": datum.alertId,
                     "alert_description": alertObj?.description ?? "",
                     "device_description": this.aai.getSensorByMac(datum.mac).description,

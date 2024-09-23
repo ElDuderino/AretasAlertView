@@ -3,6 +3,8 @@ const APP_HOST = "localhost:8080/rest/";
 
 const ASNAPIURL = `${REQ_METHOD}//${APP_HOST}`;
 
+const PDF_GENERATOR_URL = `http://172.28.170.3:8100/generate_alert_pdf/`
+
 var appBearerToken = null;
 
 /**
