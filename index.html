@@ -253,9 +253,10 @@
         // (The JavaScript code remains the same as in the previous version)
         class AlertHistoryItem {
 
-            constructor(data) {
+            constructor(AAI, data) {
+                this._AAI = AAI;
                 this.eventId = data.eventId,
-                this.mac = data.mac;
+                    this.mac = data.mac;
                 this.timestamp = data.timestamp;
                 this.type = data.sensorType;
                 this.typeStr = data.sensorTypeStr;
@@ -268,6 +269,7 @@
                 this.device_description = data.device_description;
                 this.alert_description = data.alert_description;
                 this.location_description = data.location_description;
+                this.sensorLocationObj = data.sensorLocationObj;
             }
 
             getStatusClass() {
@@ -285,6 +287,14 @@
             createCard() {
                 const card = document.createElement('div');
                 card.className = 'col-md-6 col-lg-4';
+                console.log(this.sensorLocationObj);
+
+                const buildingMapId = this.sensorLocationObj?.buildingMapId ?? null;
+                let mapLink = null;
+                if (buildingMapId) {
+                    mapLink = `<a href="#" class=view-map-${this.sensorLocationObj.buildingMapId}>View Map</a></p>`;
+                }
+
                 card.innerHTML = `
                     <div class="alert-card">
                         <div class="alert-header ${this.getStatusClass()}">
@@ -293,7 +303,9 @@
                         <div class="alert-body">
                             <p><strong>EventId:</strong> ${this.eventId}</p>
                             <p><strong>Device:</strong> ${this.device_description} MAC:${this.mac}</p>
-                            <p><strong>Building:</strong> ${this.location_description} <a href="#">View Map</a></p>
+                            <p><strong>Building:</strong> 
+                                ${this.location_description} 
+                                ${mapLink ? mapLink : ''}
                             <p><strong>Status:</strong> ${this.getStatusText()}</p>
                             <p>
                                 <strong>Download report:</strong>&nbsp;
@@ -308,6 +320,88 @@
                         </div>
                     </div>
                 `;
+
+                if (mapLink) {
+                    
+                    const mapLinkRef = card.querySelector(`.view-map-${this.sensorLocationObj.buildingMapId}`);
+                    const classThis = this;
+
+                    mapLinkRef.addEventListener('click', async (event) => {
+                        event.preventDefault();
+
+                        const x = classThis.sensorLocationObj.imgMapX; // the location of the sensor object in original map pixels X distance
+                        const y = classThis.sensorLocationObj.imgMapY; // the location of the sensor object in original map pixels Y distance
+
+                        console.debug(`imgMapX:${x} imgMapY:${y}`);
+
+                        // Fetch the building map image
+                        const buildingMap = await classThis._AAI.getBuildingMapByID(classThis.sensorLocationObj.buildingMapId);
+                        const mapImageUrl = `${ASNAPIURL}buildingmaps/getimage?bearerToken=${classThis._AAI.bearerToken}&locationId=${buildingMap.owner}&mapId=${buildingMap.id}`;
+
+                        // Create the modal HTML
+                        const modalHtml = `
+                            <div class="modal fade" id="sensorModal" tabindex="-1" aria-labelledby="sensorModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="sensorModalLabel">Sensor Location</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body" style="position: relative; overflow: hidden;">
+                                            <img id="building-map-img" src="" alt="Building Map" style="width: 100%; height: auto; position: relative;">
+                                            <div id="sensor-marker" style="position: absolute; background: red; width: 10px; height: 10px; border-radius: 50%;"></div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                        // Append modal to the body
+                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+
+                        // Initialize and show the Bootstrap modal
+                        const sensorModal = new bootstrap.Modal(document.getElementById('sensorModal'));
+                        sensorModal.show();
+
+                        document.getElementById('sensorModal').addEventListener('shown.bs.modal', function () {
+
+                            const mapImg = document.getElementById('building-map-img');
+                            mapImg.src = mapImageUrl;
+
+                            mapImg.onload = function () {
+
+                                const mapRect = mapImg.getBoundingClientRect();
+
+                                console.debug(mapRect);
+                                // Position the marker in the modal
+                                const marker = document.getElementById('sensor-marker');
+
+                                const scaleX = mapRect.width / mapImg.naturalWidth;
+                                const scaleY = mapRect.height / mapImg.naturalHeight;
+
+                                const xPosRel = scaleX * x;
+                                const yPosRel = scaleY * y;
+
+                                const markerX = xPosRel;
+                                const markerY = yPosRel;
+
+                                marker.style.left = `${markerX + marker.clientWidth / 2}px`; // Center the marker horizontally
+                                marker.style.top = `${markerY + marker.clientHeight / 2}px`;   // Center the marker vertically
+                            };
+
+                        });
+
+                        // Cleanup modal after hiding
+                        document.getElementById('sensorModal').addEventListener('hidden.bs.modal', function () {
+                            this.remove(); // Remove the modal from the DOM when hidden
+                        });
+                    });
+                }
+
 
                 // Attach the onclick event handler for the PDF download
                 const pdfLink = card.querySelector(`#pdf-link-${this.eventId}`);
@@ -444,14 +538,15 @@
 
                 const alertObj = this.getAlertObjById(datum.alertId);
 
-                let sensorTypeInfo = this.aai.getSensorTypeInfo(parseInt(datum.sensorType));
-                let locationObj = this.aai.getLocationContainingMac(datum.mac);
+                const sensorTypeInfo = this.aai.getSensorTypeInfo(parseInt(datum.sensorType));
+                const locationObj = this.aai.getLocationContainingMac(datum.mac);
+                const sensorLocationObj = this.aai.getSensorByMac(datum.mac);
 
                 const ret = {
                     "eventId": datum.eventId,
                     "alertId": datum.alertId,
-                    "alert_description": alertObj?.description ?? "",
-                    "device_description": this.aai.getSensorByMac(datum.mac).description,
+                    "alert_description": alertObj?.description ?? "No description available",
+                    "device_description": sensorLocationObj?.description ?? "No description available",
                     "mac": datum.mac,
                     "location_description": locationObj.description,
                     "sensorData": datum.sensorData,
@@ -461,6 +556,7 @@
                     "timestamp": datum.timestamp,
                     "isActive": datum.isActive,
                     "rtnTimestamp": datum.rtnTimestamp,
+                    "sensorLocationObj": sensorLocationObj,
                 }
 
                 return ret;
@@ -474,7 +570,7 @@
                 const alertNotices = await this.fetchAlertNoticesAPI(alertIds);
 
                 console.log(alertNotices);
-                this.alerts = alertNotices.map(datum => new AlertHistoryItem(this.getAnnotatedAlertNotice(datum)))
+                this.alerts = alertNotices.map(datum => new AlertHistoryItem(this.aai, this.getAnnotatedAlertNotice(datum)))
 
                 this.updateFilters();
                 this.renderAlerts();
