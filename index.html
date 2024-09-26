@@ -167,6 +167,46 @@
         .type-28 {
             background-image: url('https://iot.aretas.ca/html/images/sensortypes/AQI-30x30.png')
         }
+
+        .sensor-circle {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 2px;
+            position: relative;
+        }
+
+        .sensor-tooltip {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 5px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            min-width: 200px;
+            padding: 1em;
+        }
+
+        div#sensor-grid {
+            transition: all 0.3s ease;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .sensor-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: start;
+            align-content: start;
+        }
+
+        .sensor-circle:hover+.sensor-tooltip,
+        .sensor-tooltip:hover {
+            display: block;
+        }
     </style>
 </head>
 
@@ -199,7 +239,14 @@
             <!-- Main Content Area -->
             <main class="col-lg-10 col-md-9 col-sm-8 main-content">
                 <div class="container mt-2">
-                    <h1 class="text-center mb-2">Alert Notice Dashboard</h1>
+                    <div class="container mt-2 d-flex justify-content-between align-items-center">
+                        <h1 class="text-left mb-2">Alert Notice Dashboard</h1>
+                        <!-- Rollup for the number of down sensors -->
+                        <div id="sensor-rollup" class="alert alert-warning text-center p-2" style="min-width: 200px;">
+                            <strong>Down Sensors:</strong> <span id="downSensorCount">0</span> (Last 30 mins: <span
+                                id="recentDownCount">0</span>)
+                        </div>
+                    </div>
                     <div class="filter-section">
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -226,10 +273,14 @@
                         <!-- Alert cards will be dynamically inserted here -->
                     </div>
                 </div>
+
+                <div class="container mt-2">
+                    <h3 class="text-center mb-1">Device Status Board</h3>
+                    <div id="sensor-grid" class="p-3"></div>
+                </div>
             </main>
         </div>
     </div>
-
     <div w3-include-html="includes/footer.html"></div>
     <div w3-include-html="includes/login-modal.html"></div>
 
@@ -250,7 +301,7 @@
     <script src="js/asnapp.js"></script>
     <script src="js/AretasGlobalInit.js"></script>
     <script>
-        // (The JavaScript code remains the same as in the previous version)
+
         class AlertHistoryItem {
 
             constructor(AAI, data) {
@@ -322,7 +373,7 @@
                 `;
 
                 if (mapLink) {
-                    
+
                     const mapLinkRef = card.querySelector(`.view-map-${this.sensorLocationObj.buildingMapId}`);
                     const classThis = this;
 
@@ -669,10 +720,125 @@
             }
         }
 
+        class SensorGrid {
+            constructor(AAI, targetElementId, rollupDivId) {
+                this._AAI = AAI;
+                this.sensors = [];
+                this.targetElement = document.getElementById(targetElementId);
+                this.rollupDiv = document.getElementById(rollupDivId);
+            }
+
+            update(sensorList) {
+                // Sort sensors based on the time elapsed since last report
+                sensorList.sort((a, b) => (Date.now() - b.lastReportTime) - (Date.now() - a.lastReportTime));
+                this.sensors = sensorList;
+                this.render();
+            }
+
+            render() {
+                // Clear the target element
+                this.targetElement.innerHTML = '';
+                const container = document.createElement('div');
+                container.classList.add('sensor-container');
+                const classThis = this;
+
+                let totalDownSensors = 0;
+                let recentDownSensors = 0;
+
+                this.sensors.forEach(sensor => {
+                    const sensorObj = classThis._AAI.getSensorByMac(sensor.status.mac);
+                    const timeElapsed = (Date.now() - sensor.lastReportTime) / 60000; // Convert to minutes
+
+                    // Determine the circle color based on the time elapsed
+                    let colorClass = 'bg-success'; // Green
+                    if (timeElapsed > 10) {
+                        colorClass = 'bg-danger'; // Red
+                        totalDownSensors++;
+                        if (timeElapsed <= 30) {
+                            recentDownSensors++;
+                        }
+                    } else if (timeElapsed > 3) {
+                        colorClass = 'bg-warning'; // Yellow
+                    }
+
+                    // Create the sensor circle
+                    const sensorCircle = document.createElement('div');
+                    sensorCircle.classList.add('sensor-circle', colorClass);
+
+                    // Create the tooltip div
+                    const tooltip = document.createElement('div');
+                    tooltip.classList.add('sensor-tooltip', 'shadow-sm', 'p-2', 'border', 'rounded');
+
+                    tooltip.innerHTML = `
+                    <strong>Description:</strong> ${sensorObj.description}<br>
+                    <strong>Device Id:</strong> ${sensor.status.mac}<br>
+                    <strong>Location:</strong> ${sensor.location}<br>
+                    <strong>Last Report:</strong> ${new Date(sensor.lastReportTime).toLocaleString()}<br>
+                    ${sensor.buildingMapId ? `<a href="/map/${sensor.buildingMapId}" target="_blank">View Map</a>` : ''}
+                    `;
+
+                    // Wrap circle and tooltip together
+                    const wrapper = document.createElement('div');
+                    wrapper.style.position = 'relative';
+                    wrapper.style.margin = '3px';
+                    wrapper.style.display = 'inline-block';
+
+                    wrapper.appendChild(sensorCircle);
+                    wrapper.appendChild(tooltip);
+                    container.appendChild(wrapper);
+                });
+
+                this.targetElement.appendChild(container);
+
+                // Recreate the rollup div content
+                if (this.rollupDiv) {
+                    this.updateRollupDiv(totalDownSensors, recentDownSensors);
+                }
+            }
+
+            updateRollupDiv(totalDownSensors, recentDownSensors) {
+                // Clear the existing contents
+                this.rollupDiv.innerHTML = '';
+
+                // Create a span for the total down sensors
+                const totalSpan = document.createElement('span');
+                totalSpan.textContent = `Total Down Sensors: ${totalDownSensors} `;
+                totalSpan.style.fontWeight = 'bold';
+
+                // Create a span for the recent down sensors
+                const recentSpan = document.createElement('span');
+                recentSpan.textContent = `(Last 30 mins: ${recentDownSensors})`;
+                recentSpan.style.fontWeight = 'normal';
+
+                // Append both spans to the rollupDiv
+                this.rollupDiv.appendChild(totalSpan);
+                this.rollupDiv.appendChild(recentSpan);
+            }
+
+            async fetchSensorStatusList() {
+                const sensorMap = await this._AAI.getSensorStatusesAndLatestData(null);
+                const sensorList = [];
+                for (const [key, value] of sensorMap) {
+                    sensorList.push(value);
+                }
+
+                this.update(sensorList);
+                setTimeout(() => this.fetchSensorStatusList(), 45000);
+            }
+        }
+
 
         document.addEventListener('DOMContentLoaded', async () => {
-            aai = await app_init();
-            new AlertDashboard(aai);
+
+            AAI = await app_init();
+            new AlertDashboard(AAI);
+
+            const sensorGrid = new SensorGrid(AAI, 'sensor-grid', 'sensor-rollup');
+
+            //boostrap the sensor status update process
+            sensorGrid.fetchSensorStatusList();
+
+
         });
 
     </script>
