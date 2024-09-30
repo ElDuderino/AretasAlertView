@@ -1,0 +1,198 @@
+body {
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.navbar-brand img {
+    max-height: 110px;
+    width: auto;
+}
+
+.alert-card {
+    transition: all 0.3s ease;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.alert-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.alert-header {
+    border-radius: 15px 15px 0 0;
+    padding: 15px;
+    font-weight: bold;
+}
+
+.alert-body {
+    padding: 20px;
+}
+
+.filter-section {
+    background-color: #ffffff;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.main-content {
+    flex: 1 0 auto;
+}
+
+footer {
+    flex-shrink: 0;
+    background-color: #343a40;
+    color: #ffffff;
+    padding: 20px 0;
+    margin-top: 40px;
+}
+
+.rollup-section {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
+.rollup-card {
+    display: flex;
+    flex-direction: column;
+    border-radius: 15px;
+    border: 4px solid var(--bs-primary-border-subtle);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    background-color: #ffffff;
+    min-height: 200px;
+}
+
+.rollup-card .count {
+    font-size: 300%;
+    font-weight: bolder;
+}
+
+.rollup-card-header {
+    font-size: 20pt;
+    font-weight: bold;
+}
+
+.rollup-card-body {
+    margin-top: auto;
+    /* Pushes the body to the bottom */
+}
+
+div.sensortype-icon {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    background-repeat: no-repeat;
+    top: 8px;
+    position: relative;
+}
+
+.type-246,
+.type-243,
+.type-244,
+.type-245,
+.type-242 {
+    background-image: url('https://iot.aretas.ca/html/images/sensortypes/temperature30x30.png');
+}
+
+.type-248 {
+    background-image: url('https://iot.aretas.ca/html/images/sensortypes/rh30x30.png');
+}
+
+.type-181 {
+    background-image: url('https://iot.aretas.ca/html/images/sensortypes/CO2-30x30.png');
+}
+
+.type-182 {
+    background-image: url('https://iot.aretas.ca/html/images/sensortypes/eCO2-30x30.png');
+}
+
+.type-100,
+.type-99 {
+    background-image: url('https://iot.aretas.ca/html/images/sensortypes/pressure.png');
+}
+
+.type-96 {
+    background-image: url('https://iot.aretas.ca/html/images/sensortypes/VOCicon.png');
+}
+
+.type-64 {
+    background-image: url('https://iot.aretas.ca/html/images/sensortypes/CO.png');
+}
+
+.type-32,
+.type-33,
+.type-34,
+.type-35,
+.type-36,
+.type-37,
+.type-38,
+.type-39,
+.type-40 {
+    background-image: url('https://iot.aretas.ca/html/images/sensortypes/PM\ icon.png');
+}
+
+.type-49,
+.type-50,
+.type-51 {
+    background-image: url('https://iot.aretas.ca/html/images/sensortypes/volume-icon.png');
+}
+
+.type-115 {
+    background-image: url('https://iot.aretas.ca/html/images/sensortypes/light-icon.png');
+}
+
+.type-52,
+.type-53,
+.type-54 {
+    background-image: url('https://iot.aretas.ca/html/images/sensortypes/vibration-30x30.png');
+}
+
+.type-28 {
+    background-image: url('https://iot.aretas.ca/html/images/sensortypes/AQI-30x30.png')
+}
+
+.sensor-circle {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 2px;
+    position: relative;
+}
+
+.sensor-tooltip {
+    display: none;
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 5px;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    min-width: 200px;
+    padding: 1em;
+}
+
+div#sensor-grid {
+    transition: all 0.3s ease;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.sensor-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: start;
+    align-content: start;
+}
+
+.sensor-circle:hover+.sensor-tooltip,
+.sensor-tooltip:hover {
+    display: block;
+}

@@ -89,7 +89,7 @@ async function app_init() {
     /**
      * Make sure the nav contains a logout button
      */
-    $('#logoutButton').click(function () {
+    $('#app-logout').click(function () {
 
         let token = localStorage.getItem("X-Aretas-Bearer-Access-Token");
 

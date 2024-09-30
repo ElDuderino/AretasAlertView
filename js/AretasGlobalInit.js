@@ -104,6 +104,8 @@ class AretasAppInstance {
 
             let ret = await response.json();
 
+            console.debug(ret);
+
             let isThereData = false;
 
             console.log("Success fetching client location view");

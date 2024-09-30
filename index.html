@@ -8,205 +8,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="app.css" rel="stylesheet">
     <style>
-        body {
-            background-color: #f8f9fa;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        .navbar-brand img {
-            max-height: 110px;
-            width: auto;
-        }
-
-        .alert-card {
-            transition: all 0.3s ease;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-
-        .alert-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .alert-header {
-            border-radius: 15px 15px 0 0;
-            padding: 15px;
-            font-weight: bold;
-        }
-
-        .alert-body {
-            padding: 20px;
-        }
-
-        .filter-section {
-            background-color: #ffffff;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .main-content {
-            flex: 1 0 auto;
-        }
-
-        footer {
-            flex-shrink: 0;
-            background-color: #343a40;
-            color: #ffffff;
-            padding: 20px 0;
-            margin-top: 40px;
-        }
-
-        .rollup-section {
-            margin-top: 30px;
-            margin-bottom: 30px;
-        }
-
-        .rollup-card {
-            display: flex;
-            flex-direction: column;
-            border-radius: 15px;
-            border: 4px solid var(--bs-primary-border-subtle);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 15px;
-            background-color: #ffffff;
-            min-height: 200px;
-        }
-
-        .rollup-card .count {
-            font-size: 300%;
-            font-weight: bolder;
-        }
-
-        .rollup-card-header {
-            font-size: 20pt;
-            font-weight: bold;
-        }
-
-        .rollup-card-body {
-            margin-top: auto;
-            /* Pushes the body to the bottom */
-        }
-
-        div.sensortype-icon {
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            background-repeat: no-repeat;
-            top: 8px;
-            position: relative;
-        }
-
-        .type-246,
-        .type-243,
-        .type-244,
-        .type-245,
-        .type-242 {
-            background-image: url('https://iot.aretas.ca/html/images/sensortypes/temperature30x30.png');
-        }
-
-        .type-248 {
-            background-image: url('https://iot.aretas.ca/html/images/sensortypes/rh30x30.png');
-        }
-
-        .type-181 {
-            background-image: url('https://iot.aretas.ca/html/images/sensortypes/CO2-30x30.png');
-        }
-
-        .type-182 {
-            background-image: url('https://iot.aretas.ca/html/images/sensortypes/eCO2-30x30.png');
-        }
-
-        .type-100,
-        .type-99 {
-            background-image: url('https://iot.aretas.ca/html/images/sensortypes/pressure.png');
-        }
-
-        .type-96 {
-            background-image: url('https://iot.aretas.ca/html/images/sensortypes/VOCicon.png');
-        }
-
-        .type-64 {
-            background-image: url('https://iot.aretas.ca/html/images/sensortypes/CO.png');
-        }
-
-        .type-32,
-        .type-33,
-        .type-34,
-        .type-35,
-        .type-36,
-        .type-37,
-        .type-38,
-        .type-39,
-        .type-40 {
-            background-image: url('https://iot.aretas.ca/html/images/sensortypes/PM\ icon.png');
-        }
-
-        .type-49,
-        .type-50,
-        .type-51 {
-            background-image: url('https://iot.aretas.ca/html/images/sensortypes/volume-icon.png');
-        }
-
-        .type-115 {
-            background-image: url('https://iot.aretas.ca/html/images/sensortypes/light-icon.png');
-        }
-
-        .type-52,
-        .type-53,
-        .type-54 {
-            background-image: url('https://iot.aretas.ca/html/images/sensortypes/vibration-30x30.png');
-        }
-
-        .type-28 {
-            background-image: url('https://iot.aretas.ca/html/images/sensortypes/AQI-30x30.png')
-        }
-
-        .sensor-circle {
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            display: inline-block;
-            margin: 2px;
-            position: relative;
-        }
-
-        .sensor-tooltip {
-            display: none;
-            position: absolute;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            padding: 5px;
-            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
-            z-index: 10;
-            min-width: 200px;
-            padding: 1em;
-        }
-
-        div#sensor-grid {
-            transition: all 0.3s ease;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-
-        .sensor-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: start;
-            align-content: start;
-        }
-
-        .sensor-circle:hover+.sensor-tooltip,
-        .sensor-tooltip:hover {
-            display: block;
-        }
+        
     </style>
 </head>
 
@@ -231,6 +35,9 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#">IoT Platform / Analytics</a>
+                        </li>
+                        <li class="nav-item"></li>
+                            <a class="nav-link" href="#" id="app-logout">Logout</a>
                         </li>
                     </ul>
                 </div>
@@ -314,7 +121,7 @@
                 this.data = data.sensorData;
                 this.dataStr = data.sensorDataStr;
                 this.alertId = data.alertId;
-                this.isActive = data.isActive;
+                this.isResolved = data.isResolved;
                 this.eventId = data.eventId;
                 this.rtnTimestamp = data.rtnTimestamp;
                 this.device_description = data.device_description;
@@ -324,11 +131,11 @@
             }
 
             getStatusClass() {
-                return this.isActive ? 'bg-danger text-white' : 'bg-success text-white';
+                return this.isResolved ? 'bg-success text-white' : 'bg-danger text-white';
             }
 
             getStatusText() {
-                return this.isActive ? 'Active' : 'Resolved';
+                return this.isResolved ? 'Resolved' : 'Active';
             }
 
             formatTimestamp(timestamp) {
@@ -367,7 +174,7 @@
                             <p><strong>Sensor Type:</strong> ${this.typeStr}</p>
                             <p><strong>Data:</strong> ${this.dataStr}</p>
                             <p><strong>Triggered:</strong> ${this.formatTimestamp(this.timestamp)}</p>
-                            ${this.rtnTimestamp ? `<p><strong>Resolved:</strong> ${this.formatTimestamp(this.rtnTimestamp)}</p>` : ''}
+                            ${this.rtnTimestamp != 0 ? `<p><strong>Resolved:</strong> ${this.formatTimestamp(this.rtnTimestamp)}</p>` : ''}
                         </div>
                     </div>
                 `;
@@ -539,7 +346,7 @@
 
                     showLoader();
 
-                    let response = await globalFetch(url, {
+                    const response = await globalFetch(url, {
                         method: 'POST',
                         headers: {
                             "Content-Type": "application/json",
@@ -554,8 +361,8 @@
                         return null;
                     }
 
-                    let data = await response.json();
-                    console.debug(data);
+                    const data = await response.json();
+
                     return data;
 
                 } catch (error) {
@@ -605,7 +412,7 @@
                     "sensorType": datum.sensorType,
                     "sensorTypeStr": sensorTypeInfo.label,
                     "timestamp": datum.timestamp,
-                    "isActive": datum.isActive,
+                    "isResolved": datum.isResolved,
                     "rtnTimestamp": datum.rtnTimestamp,
                     "sensorLocationObj": sensorLocationObj,
                 }
@@ -618,9 +425,34 @@
 
                 const alertIds = this.alertsDefinitionList.map(alertItem => alertItem.id);
 
+                if(alertIds.length == 0){
+
+                    document.getElementById("alertContainer").innerHTML = `
+                        <div class="alert alert-warning text-center p-2" style="min-width: 200px;">
+                            <h4>No Alerts Defined in this Account</h4>
+                        </div>
+                    `;
+
+                    return;
+
+                }
+
                 const alertNotices = await this.fetchAlertNoticesAPI(alertIds);
 
-                console.log(alertNotices);
+                //console.log(alertNotices);
+  
+                if(alertNotices.length == 0){
+
+                    document.getElementById("alertContainer").innerHTML = `
+                        <div class="alert alert-success text-center p-2" style="min-width: 200px;">
+                            <h4>No Alert Violations found, all is well.</h4>
+                        </div>
+                    `;
+
+                    return;
+                }
+
+                console.debug(alertNotices);
                 this.alerts = alertNotices.map(datum => new AlertHistoryItem(this.aai, this.getAnnotatedAlertNotice(datum)))
 
                 this.updateFilters();
@@ -747,6 +579,7 @@
 
                 this.sensors.forEach(sensor => {
                     const sensorObj = classThis._AAI.getSensorByMac(sensor.status.mac);
+                    const locationObj = classThis._AAI.getLocationByID(sensorObj.owner);
                     const timeElapsed = (Date.now() - sensor.lastReportTime) / 60000; // Convert to minutes
 
                     // Determine the circle color based on the time elapsed
@@ -772,7 +605,7 @@
                     tooltip.innerHTML = `
                     <strong>Description:</strong> ${sensorObj.description}<br>
                     <strong>Device Id:</strong> ${sensor.status.mac}<br>
-                    <strong>Location:</strong> ${sensor.location}<br>
+                    <strong>Location:</strong> ${locationObj.description}<br>
                     <strong>Last Report:</strong> ${new Date(sensor.lastReportTime).toLocaleString()}<br>
                     ${sensor.buildingMapId ? `<a href="/map/${sensor.buildingMapId}" target="_blank">View Map</a>` : ''}
                     `;
@@ -837,7 +670,6 @@
 
             //boostrap the sensor status update process
             sensorGrid.fetchSensorStatusList();
-
 
         });
 
